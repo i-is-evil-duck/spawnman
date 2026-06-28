@@ -1,0 +1,46 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/.gradle-wrapper.jar.mapping
+gradle/.gradle
+gradle/applet
+gradle/initialized
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+bin/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Minecraft
+run/
+logs/
+crash-reports/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Java
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Environment
+.env
+local.properties
+
+# Build artifacts
+out/
+*.log
+*.tmp
