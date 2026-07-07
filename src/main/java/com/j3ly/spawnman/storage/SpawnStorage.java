@@ -1,7 +1,7 @@
-package com.ducky.mods.spawnman.storage;
+package com.j3ly.spawnman.storage;
 
 import com.google.gson.*;
-import com.ducky.mods.spawnman.model.SpawnSet;
+import com.j3ly.spawnman.model.SpawnSet;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class SpawnStorage {
         return result;
     }
 
-    private void save() {
+    public void save() {
         try {
             Files.createDirectories(spawnFile.getParent());
             List<Map<String, Object>> list = new ArrayList<>();

@@ -7,12 +7,12 @@ modId="spawnman"
 version="1.0.0"
 displayName="SpawnMan"
 logoFile="spawnman.png"
-credits="Duckymods Team"
-authors="Duckymods"
+credits="i-is-evil-duck Team"
+authors="i-is-evil-duck"
 description='''
 Custom game mode spawns. Create main spawn areas with multiple points or area boxes. Players randomly spawn at defined positions.
 '''
-displayURL="https://duckymods.example.com"
+displayURL="https://i-is-evil-duck.example.com"
 
 [[dependencies.spawnman]]
     modId="forge"

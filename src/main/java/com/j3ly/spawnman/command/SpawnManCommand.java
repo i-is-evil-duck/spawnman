@@ -1,9 +1,10 @@
-package com.ducky.mods.spawnman.command;
+package com.j3ly.spawnman.command;
 
-import com.ducky.mods.spawnman.model.SpawnArea;
-import com.ducky.mods.spawnman.model.SpawnPoint;
-import com.ducky.mods.spawnman.model.SpawnSet;
-import com.ducky.mods.spawnman.storage.SpawnStorage;
+import com.j3ly.spawnman.gui.SpawnManScreen;
+import com.j3ly.spawnman.model.SpawnArea;
+import com.j3ly.spawnman.model.SpawnPoint;
+import com.j3ly.spawnman.model.SpawnSet;
+import com.j3ly.spawnman.storage.SpawnStorage;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.*;
@@ -13,6 +14,8 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 
 import java.util.*;
 
@@ -27,8 +30,11 @@ public class SpawnManCommand {
 
     public void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-            Commands.literal("smspawn")
+            Commands.literal("sm")
                 .requires(source -> source.hasPermission(2))
+
+                .then(Commands.literal("gui")
+                    .executes(this::openGui))
 
                 .then(Commands.literal("set")
                     .then(Commands.literal("point")
@@ -37,7 +43,14 @@ public class SpawnManCommand {
                                 .executes(this::setPointSpawn))))
                     .then(Commands.literal("area")
                         .then(Commands.argument("id", StringArgumentType.word())
-                            .executes(this::setAreaSpawn))))
+                            .executes(ctx -> setAreaSpawn(ctx, null))
+                            .then(Commands.argument("team", StringArgumentType.word())
+                                .executes(ctx -> setAreaSpawn(ctx, StringArgumentType.getString(ctx, "team")))))))
+
+                .then(Commands.literal("team")
+                    .then(Commands.argument("id", StringArgumentType.word())
+                        .then(Commands.argument("team", StringArgumentType.word())
+                            .executes(this::setTeam))))
 
                 .then(Commands.literal("remove")
                     .then(Commands.argument("id", StringArgumentType.word())
@@ -55,6 +68,20 @@ public class SpawnManCommand {
                     .executes(ctx -> setMarker(ctx, markerNum))
             );
         }
+    }
+
+    private int openGui(CommandContext<CommandSourceStack> ctx) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer)) {
+            ctx.getSource().sendFailure(Component.literal("§cMust be used by a player"));
+            return 0;
+        }
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+            net.minecraft.client.Minecraft.getInstance().tell(() ->
+                net.minecraft.client.Minecraft.getInstance().setScreen(
+                    new SpawnManScreen(storage, null)
+                )
+            ));
+        return Command.SINGLE_SUCCESS;
     }
 
     private int setMarker(CommandContext<CommandSourceStack> ctx, int markerNum) {
@@ -126,7 +153,7 @@ public class SpawnManCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int setAreaSpawn(CommandContext<CommandSourceStack> ctx) {
+    private int setAreaSpawn(CommandContext<CommandSourceStack> ctx, String team) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
             ctx.getSource().sendFailure(Component.literal("§cMust be used by a player"));
             return 0;
@@ -153,10 +180,33 @@ public class SpawnManCommand {
             markers[1].x, markers[1].y, markers[1].z,
             markers[2].x, markers[2].y, markers[2].z
         ));
+        set.setTeam(team);
 
         storage.addSpawnSet(set);
+        if (team != null) {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("§aSpawn area '§e" + id + "§a' created for team §e" + team), true);
+        } else {
+            ctx.getSource().sendSuccess(() ->
+                Component.literal("§aSpawn area '§e" + id + "§a' created"), true);
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setTeam(CommandContext<CommandSourceStack> ctx) {
+        String id = StringArgumentType.getString(ctx, "id");
+        String team = StringArgumentType.getString(ctx, "team");
+
+        SpawnSet set = storage.getSpawnSet(id);
+        if (set == null) {
+            ctx.getSource().sendFailure(Component.literal("§cSpawn set '" + id + "' not found"));
+            return 0;
+        }
+
+        set.setTeam(team);
+        storage.save();
         ctx.getSource().sendSuccess(() ->
-            Component.literal("§aSpawn area '§e" + id + "§a' created"), true);
+            Component.literal("§aSpawn set '§e" + id + "§a' assigned to team §e" + team), true);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -182,8 +232,9 @@ public class SpawnManCommand {
         ctx.getSource().sendSuccess(() -> Component.literal("§6=== Spawn Sets ==="), false);
         for (SpawnSet set : allSets) {
             String type = set.isArea() ? "Area" : "Points (" + set.getPoints().size() + ")";
+            String teamInfo = set.hasTeam() ? "§r | Team: §b" + set.getTeam() : "";
             ctx.getSource().sendSuccess(() -> Component.literal(
-                "§e" + set.getId() + "§r | Type: §f" + type + "§r | World: §7" +
+                "§e" + set.getId() + "§r | Type: §f" + type + teamInfo + "§r | World: §7" +
                 (set.getWorld() != null ? set.getWorld() : "any")), false);
         }
         return Command.SINGLE_SUCCESS;

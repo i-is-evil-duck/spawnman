@@ -1,4 +1,4 @@
-package com.ducky.mods.spawnman.model;
+package com.j3ly.spawnman.model;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -8,6 +8,7 @@ public class SpawnSet {
     private final List<SpawnPoint> points = new ArrayList<>();
     private SpawnArea area;
     private String world;
+    private String team;
 
     public SpawnSet(String id) {
         this.id = id;
@@ -24,7 +25,12 @@ public class SpawnSet {
     public String getWorld() { return world; }
     public void setWorld(String world) { this.world = world; }
 
+    public String getTeam() { return team; }
+    public void setTeam(String team) { this.team = team; }
+
     public boolean isArea() { return area != null; }
+
+    public boolean hasTeam() { return team != null && !team.isEmpty(); }
 
     public SpawnPoint getRandomSpawn() {
         if (isArea()) {
@@ -38,6 +44,7 @@ public class SpawnSet {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("id", id);
         data.put("world", world);
+        data.put("team", team);
 
         List<Map<String, Object>> pointList = new ArrayList<>();
         for (SpawnPoint p : points) {
@@ -56,6 +63,7 @@ public class SpawnSet {
     public static SpawnSet deserialize(Map<String, Object> data) {
         SpawnSet set = new SpawnSet((String) data.get("id"));
         set.world = (String) data.get("world");
+        set.team = (String) data.get("team");
 
         Object pointsObj = data.get("points");
         if (pointsObj instanceof List) {

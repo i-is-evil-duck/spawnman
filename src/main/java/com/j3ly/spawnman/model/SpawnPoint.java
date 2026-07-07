@@ -1,4 +1,4 @@
-package com.ducky.mods.spawnman.model;
+package com.j3ly.spawnman.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
