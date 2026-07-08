@@ -1,9 +1,11 @@
 package com.j3ly.spawnman.command;
 
+import com.j3ly.spawnman.event.PlayerSpawnHandler;
 import com.j3ly.spawnman.model.SpawnArea;
 import com.j3ly.spawnman.model.SpawnPoint;
 import com.j3ly.spawnman.model.SpawnSet;
 import com.j3ly.spawnman.storage.SpawnStorage;
+import com.j3ly.spawnman.storage.TeamStorage;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.*;
@@ -17,11 +19,13 @@ import java.util.*;
 
 public class SpawnManCommand {
     private static final int MAX_MARKERS = 10;
+    public static final Map<UUID, Vec3[]> playerMarkers = new HashMap<>();
     private final SpawnStorage storage;
-    private final Map<UUID, Vec3[]> playerMarkers = new HashMap<>();
+    private TeamStorage teamStorage;
 
-    public SpawnManCommand(SpawnStorage storage) {
+    public SpawnManCommand(SpawnStorage storage, TeamStorage teamStorage) {
         this.storage = storage;
+        this.teamStorage = teamStorage;
     }
 
     public void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -51,6 +55,10 @@ public class SpawnManCommand {
 
                 .then(Commands.literal("list")
                     .executes(this::listSpawnSets))
+
+                .then(Commands.literal("tp")
+                    .then(Commands.argument("team", StringArgumentType.word())
+                        .executes(this::teleportTeam)))
         );
 
         for (int i = 1; i <= MAX_MARKERS; i++) {
@@ -216,6 +224,31 @@ public class SpawnManCommand {
                 "§e" + set.getId() + "§r | Type: §f" + type + teamInfo + "§r | World: §7" +
                 (set.getWorld() != null ? set.getWorld() : "any")), false);
         }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int teleportTeam(CommandContext<CommandSourceStack> ctx) {
+        String team = StringArgumentType.getString(ctx, "team");
+        List<ServerPlayer> players = ctx.getSource().getServer().getPlayerList().getPlayers();
+        int[] count = {0};
+        for (ServerPlayer player : players) {
+            if (!team.equals(teamStorage.getPlayerTeam(player.getUUID()))) continue;
+            String world = player.level().dimension().location().toString();
+            for (SpawnSet set : storage.getSpawnSetsForWorld(world)) {
+                if (team.equals(set.getTeam())) {
+                    SpawnPoint point = set.getRandomSpawn();
+                    if (point != null) {
+                        Vec3 safe = PlayerSpawnHandler.findSafeSpawn(player.level(), point.getX(), point.getY(), point.getZ());
+                        player.teleportTo(safe.x, safe.y, safe.z);
+                        count[0]++;
+                    }
+                    break;
+                }
+            }
+        }
+        int c = count[0];
+        ctx.getSource().sendSuccess(() ->
+            Component.literal("§aTeleported §e" + c + "§a player(s) to team §e" + team + "§a spawn"), true);
         return Command.SINGLE_SUCCESS;
     }
 }

@@ -1,5 +1,6 @@
 package com.j3ly.spawnman.command;
 
+import com.j3ly.spawnman.event.PlayerSpawnHandler;
 import com.j3ly.spawnman.model.SpawnPoint;
 import com.j3ly.spawnman.model.SpawnSet;
 import com.j3ly.spawnman.storage.SpawnStorage;
@@ -12,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Collection;
 
@@ -58,7 +60,8 @@ public class TeamCommand {
         if (teamSpawn != null) {
             SpawnPoint point = teamSpawn.getRandomSpawn();
             if (point != null) {
-                player.teleportTo(point.getX(), point.getY(), point.getZ());
+                Vec3 safe = PlayerSpawnHandler.findSafeSpawn(player.level(), point.getX(), point.getY(), point.getZ());
+                player.teleportTo(safe.x, safe.y, safe.z);
                 ctx.getSource().sendSuccess(() ->
                     Component.literal("§aJoined team §e" + team + "§a and teleported to spawn"), true);
                 return Command.SINGLE_SUCCESS;

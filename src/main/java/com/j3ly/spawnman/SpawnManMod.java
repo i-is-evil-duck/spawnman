@@ -3,13 +3,16 @@ package com.j3ly.spawnman;
 import com.j3ly.spawnman.command.SpawnManCommand;
 import com.j3ly.spawnman.command.TeamCommand;
 import com.j3ly.spawnman.event.PlayerSpawnHandler;
+import com.j3ly.spawnman.item.ModItems;
 import com.j3ly.spawnman.storage.SpawnStorage;
 import com.j3ly.spawnman.storage.TeamStorage;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 @Mod(SpawnManMod.MOD_ID)
@@ -21,6 +24,9 @@ public class SpawnManMod {
     private final TeamStorage teamStorage;
 
     public SpawnManMod() {
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModItems.ITEMS.register(modEventBus);
+
         this.spawnStorage = new SpawnStorage();
         this.teamStorage = new TeamStorage();
         MinecraftForge.EVENT_BUS.register(this);
@@ -30,7 +36,7 @@ public class SpawnManMod {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        new SpawnManCommand(spawnStorage).register(event.getDispatcher());
+        new SpawnManCommand(spawnStorage, teamStorage).register(event.getDispatcher());
         new TeamCommand(spawnStorage, teamStorage).register(event.getDispatcher());
     }
 }
