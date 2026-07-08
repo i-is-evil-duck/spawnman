@@ -105,7 +105,15 @@ public class SpawnManCommand {
         SpawnSet set = new SpawnSet(id);
         set.setWorld(player.level().dimension().location().toString());
 
-        String[] markerIds = markersStr.split("\\s+");
+        String[] parts = markersStr.split("\\s+");
+        String last = parts[parts.length - 1];
+        String team = null;
+        if (!last.replaceAll("[^0-9]", "").matches("\\d+")) {
+            team = last;
+            markersStr = markersStr.substring(0, markersStr.lastIndexOf(last)).trim();
+        }
+
+        String[] markerIds = markersStr.isEmpty() ? new String[0] : markersStr.split("\\s+");
         UUID uuid = player.getUUID();
         Vec3[] markers = playerMarkers.get(uuid);
 
@@ -134,9 +142,14 @@ public class SpawnManCommand {
             return 0;
         }
 
+        if (team != null) {
+            set.setTeam(team);
+        }
+
         storage.addSpawnSet(set);
+        String teamMsg = team != null ? " for team §e" + team : "";
         ctx.getSource().sendSuccess(() ->
-            Component.literal("§aSpawn set '§e" + id + "§a' created with " + set.getPoints().size() + " points"), true);
+            Component.literal("§aSpawn set '§e" + id + "§a' created with " + set.getPoints().size() + " points" + teamMsg), true);
         return Command.SINGLE_SUCCESS;
     }
 
