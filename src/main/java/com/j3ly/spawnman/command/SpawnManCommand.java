@@ -1,6 +1,5 @@
 package com.j3ly.spawnman.command;
 
-import com.j3ly.spawnman.gui.SpawnManScreen;
 import com.j3ly.spawnman.model.SpawnArea;
 import com.j3ly.spawnman.model.SpawnPoint;
 import com.j3ly.spawnman.model.SpawnSet;
@@ -14,9 +13,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-
 import java.util.*;
 
 public class SpawnManCommand {
@@ -32,9 +28,6 @@ public class SpawnManCommand {
         dispatcher.register(
             Commands.literal("sm")
                 .requires(source -> source.hasPermission(2))
-
-                .then(Commands.literal("gui")
-                    .executes(this::openGui))
 
                 .then(Commands.literal("set")
                     .then(Commands.literal("point")
@@ -68,20 +61,6 @@ public class SpawnManCommand {
                     .executes(ctx -> setMarker(ctx, markerNum))
             );
         }
-    }
-
-    private int openGui(CommandContext<CommandSourceStack> ctx) {
-        if (!(ctx.getSource().getEntity() instanceof ServerPlayer)) {
-            ctx.getSource().sendFailure(Component.literal("§cMust be used by a player"));
-            return 0;
-        }
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-            net.minecraft.client.Minecraft.getInstance().tell(() ->
-                net.minecraft.client.Minecraft.getInstance().setScreen(
-                    new SpawnManScreen(storage, null)
-                )
-            ));
-        return Command.SINGLE_SUCCESS;
     }
 
     private int setMarker(CommandContext<CommandSourceStack> ctx, int markerNum) {

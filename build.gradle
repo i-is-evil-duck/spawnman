@@ -41,13 +41,8 @@ minecraft {
     }
 }
 
-repositories {
-    maven { url "file://${project.projectDir}/../maven" }
-}
-
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
-    implementation fg.deobf('com.j3ly:duckylib:1.0.0')
 }
 
 jar {
